@@ -417,7 +417,7 @@ impl View {
                     format!(
                       r#"{}{}"#,
                       content(),
-                      node.id.to_marker()
+                      node.id.to_marker(true)
                     ).into()
                   }
                 }
@@ -436,7 +436,6 @@ impl View {
                         false,
                         Box::new(move || {
                             u.id.to_marker(
-                                #[cfg(debug_assertions)]
                                 true,
                                 #[cfg(debug_assertions)]
                                 "unit",
@@ -502,24 +501,24 @@ impl View {
 
                                         if is_el {
                                             content()
-                                        } else {
+                                    } else {
+                                        is_el {
                                             format!(
-                                                "{}{}{}",
-                                                id.to_marker(
-                                                    #[cfg(debug_assertions)]
-                                                    false,
-                                                    #[cfg(debug_assertions)]
-                                                    "each-item",
-                                                ),
-                                                content(),
-                                                id.to_marker(
-                                                    #[cfg(debug_assertions)]
-                                                    true,
-                                                    #[cfg(debug_assertions)]
-                                                    "each-item",
-                                                )
+                                            "{}{}{}",
+                                            id.to_marker(
+                                                false,
+                                                #[cfg(debug_assertions)]
+                                                "each-item",
+                                            ),
+                                            content(),
+                                            id.to_marker(
+                                                true,
+                                                #[cfg(debug_assertions)]
+                                                "each-item",
                                             )
-                                        }
+                                        )
+                                    }
+                                    }
                                     })
                                     .join("")
                                     .into()
@@ -533,14 +532,12 @@ impl View {
                     format!(
                         r#"{}{}{}"#,
                         id.to_marker(
-                            #[cfg(debug_assertions)]
                             false,
                             #[cfg(debug_assertions)]
                             name,
                         ),
                         content(),
                         id.to_marker(
-                            #[cfg(debug_assertions)]
                             true,
                             #[cfg(debug_assertions)]
                             name,
@@ -708,7 +705,7 @@ where
 pub(crate) trait ToMarker {
     fn to_marker(
         &self,
-        #[cfg(debug_assertions)] closing: bool,
+        closing: bool,
         #[cfg(debug_assertions)] component_name: &str,
     ) -> Cow<'static, str>;
 }
@@ -717,7 +714,7 @@ impl ToMarker for HydrationKey {
     #[inline(always)]
     fn to_marker(
         &self,
-        #[cfg(debug_assertions)] closing: bool,
+        closing: bool,
         #[cfg(debug_assertions)] component_name: &str,
     ) -> Cow<'static, str> {
         #[cfg(debug_assertions)]
@@ -746,12 +743,11 @@ impl ToMarker for Option<HydrationKey> {
     #[inline(always)]
     fn to_marker(
         &self,
-        #[cfg(debug_assertions)] closing: bool,
+        closing: bool,
         #[cfg(debug_assertions)] component_name: &str,
     ) -> Cow<'static, str> {
         self.map(|key| {
             key.to_marker(
-                #[cfg(debug_assertions)]
                 closing,
                 #[cfg(debug_assertions)]
                 component_name,
