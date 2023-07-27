@@ -554,6 +554,69 @@ where
     )
 }
 
+#[tracing::instrument(level = "info", fields(error), skip_all)]
+pub fn render_route_with_context<IV>(
+    options: LeptosOptions,
+    paths: Vec<RouteListing>,
+    additional_context: impl Fn() + 'static + Clone + Send,
+    app_fn: impl Fn() -> IV + Clone + Send + 'static,
+) -> impl Fn(
+    Request<Body>,
+) -> Pin<
+    Box<
+        dyn Future<Output = Response<StreamBody<PinnedHtmlStream>>>
+            + Send
+            + 'static,
+    >,
+> + Clone
+       + Send
+       + 'static
+where
+    IV: IntoView,
+{
+    let ooo = render_app_to_stream_with_context(
+        LeptosOptions::from_ref(&options),
+        additional_context.clone(),
+        app_fn.clone(),
+    );
+    let pb = render_app_to_stream_with_context_and_replace_blocks(
+        LeptosOptions::from_ref(&options),
+        additional_context.clone(),
+        app_fn.clone(),
+        true,
+    );
+    let io = render_app_to_stream_in_order_with_context(
+        LeptosOptions::from_ref(&options),
+        additional_context.clone(),
+        app_fn.clone(),
+    );
+    let asyn = render_app_async_with_context(
+        LeptosOptions::from_ref(&options),
+        additional_context.clone(),
+        app_fn.clone(),
+    );
+
+    move |req| {
+        let uri = req.uri();
+        // 1. Process route to match the values in routeListing
+        let path = uri.path_and_query().unwrap().as_str();
+        let full_path = format!("http://leptos.dev{path}");
+        // 2. Find RouteListing in paths. This should probably be optimized, we probably don't want to
+        // search for this every time
+        let listing: &RouteListing = paths
+            .iter()
+            .find_map(|r| if r.path() == path { Some(r) } else { None })
+            .unwrap();
+        // 3. Match listing mode against known, and choose function
+        match listing.mode() {
+            SsrMode::OutOfOrder => ooo(req),
+            SsrMode::PartiallyBlocked => pb(req),
+            SsrMode::InOrder => io(req),
+            SsrMode::Async => todo!(), //asyn(req),
+        }
+    }
+}
+
 /// Returns an Axum [Handler](axum::handler::Handler) that listens for a `GET` request and tries
 /// to route it using [leptos_router], serving an HTML stream of your application.
 ///

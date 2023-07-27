@@ -346,7 +346,6 @@ fn fragments_to_chunks(
                          }}
                       }}
                     var range = new Range();
-                    console.log("loading <Suspense/> between ", id, open, close);
                     range.setStartAfter(open);
                     range.setEndBefore(close);
                     range.deleteContents();
