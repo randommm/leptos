@@ -382,7 +382,7 @@ pub(crate)fn attribute_to_tokens(
         };
         let undelegated_ident = match &node.key {
             NodeName::Punctuated(parts) => parts.last().and_then(|last| {
-                if last == "undelegated" {
+                if last.to_string() == "undelegated" {
                     Some(last)
                 } else {
                     None
