@@ -13,7 +13,7 @@ use syn::spanned::Spanned;
 
 pub(crate) fn render_template(cx: &Ident, nodes: &[Node]) -> TokenStream {
     // No reason to make template unique, because it's "static" is in inner scope.
-    let template_uid = Ident::new(&"__TEMPLATE", Span::call_site());
+    let template_uid = Ident::new("__TEMPLATE", Span::call_site());
 
     match nodes.first() {
         Some(Node::Element(node)) => {
